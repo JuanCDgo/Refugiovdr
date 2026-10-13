@@ -121,3 +121,29 @@ CREATE TABLE IF NOT EXISTS public.movimientos_caja (
 -- Le forzamos a Supabase a que lea toda la estructura nueva de un saque
 -- ====================================================================================
 NOTIFY pgrst, 'reload schema';
+-- 1. Crear el bucket 'productos' y hacerlo público para que se vean las fotos y el logo
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('productos', 'productos', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+-- 2. Dar permisos públicos para ver, subir, reemplazar y borrar imágenes en 'productos'
+DROP POLICY IF EXISTS "Acceso publico lectura productos" ON storage.objects;
+CREATE POLICY "Acceso publico lectura productos"
+ON storage.objects FOR SELECT TO public
+USING (bucket_id = 'productos');
+
+DROP POLICY IF EXISTS "Acceso publico subida productos" ON storage.objects;
+CREATE POLICY "Acceso publico subida productos"
+ON storage.objects FOR INSERT TO public
+WITH CHECK (bucket_id = 'productos');
+
+DROP POLICY IF EXISTS "Acceso publico actualizacion productos" ON storage.objects;
+CREATE POLICY "Acceso publico actualizacion productos"
+ON storage.objects FOR UPDATE TO public
+USING (bucket_id = 'productos')
+WITH CHECK (bucket_id = 'productos');
+
+DROP POLICY IF EXISTS "Acceso publico borrado productos" ON storage.objects;
+CREATE POLICY "Acceso publico borrado productos"
+ON storage.objects FOR DELETE TO public
+USING (bucket_id = 'productos');
